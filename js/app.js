@@ -1,108 +1,124 @@
-import {elHands, elUser, elRobot, elRefershGame, elGameZone, elResultZone, elTextName,elModeChanger,elAdvancedMode} from "./html-el.js";
+import {
+  elHands,
+  elUser,
+  elRobot,
+  elRefreshGameButton,
+  elModeChangerButton,
+  elGameZone,
+  elResultZone,
+  elAdvenced,
+  elBasic,
+  elScore
+} from "./html-elements.js";
 
 
+// score
+let score = Number(localStorage.getItem("score")) || 0;
+elScore.innerText = score;
 
-let activeMode="basic";
+// mode
+let activeMode = localStorage.getItem("mode") || "basic";
 
-function modeChanger (){
-if(activeMode==="basic"){
-activeMode="advanced";
-elAdvancedMode.style.display="block";
-elGameZone.style.display="none";
-elModeChanger.innerText="basic"
+
+function robotChoose() {
+  const hands = ["rock", "paper", "scissors"];
+  const randomIndex = Math.trunc(Math.random() * hands.length);
+  return hands[randomIndex];
 }
-else{
-activeMode="basic";
-elAdvancedMode.style.display="none";
-elGameZone.style.display="flex";
-elModeChanger.innerText="advanced"
-}}
-//   robot choose 
-function robotchoose() {
-    const hands = ['rock', 'paper', 'scissors'];
-    const randomIndex = Math.trunc(Math.random() * hands.length);
-    return hands[randomIndex];
-};
-// swap zones   
-
-function swapZone (boolean) {
-     if (boolean) {
-        elGameZone.style.display = 'none';
-         elResultZone.style.display = 'flex';
-     }
-        else {
-         elGameZone.style.display = 'flex';
-         elResultZone.style.display = 'none';
-}}
 
 
-      
 
-// Find winner
-     function checkWiner(u, r){
-        const user = u;
-        const robot = r;
- 
-    const action ={
-        scissors: {
-            rock: "ROBOT",
-            paper: "USER",
-            scissors: "TIE",
-            spock: "ROBOT",
-            lizard: "USER",
-        },
-        paper: {
-            rock: "USER",
-            paper: "TIE",
-            scissors: "ROBOT",
-            spock: "USER",
-            lizard: "ROBOT",
-        },
-        rock: {
-            rock: "TIE",
-            paper: "ROBOT",
-            scissors: "USER",
-            spock: "ROBOT",
-            lizard: "USER",
-        },
-        spock: {
-            rock: "USER",
-            paper: "ROBOT",
-            scissors: "USER",
-            spock: "TIE",
-            lizard: "ROBOT"
-        },
-        lizard: {
-            rock: "ROBOT",
-            paper: "USER",
-            scissors: "ROBOT",
-            spock: "USER",
-            lizard: "TIE"
-        }  
+function applyMode() {
+  if (activeMode === "advenced") {
+    elAdvenced.style.display = "none";
+    elBasic.style.display = "grid";
+    elModeChangerButton.innerText = "Basic";
+  } else {
+    elAdvenced.style.display = "grid";
+    elBasic.style.display = "none";
+    elModeChangerButton.innerText = "Advenced";
+  }
+}
+
+function modeChanger() {
+  activeMode = activeMode === "basic" ? "advenced" : "basic";
+  localStorage.setItem("mode", activeMode);
+  applyMode();
+}
+
+
+
+function swapZone(isResult) {
+  if (isResult) {
+    elGameZone.style.display = "none";
+    elResultZone.style.display = "flex";
+  } else {
+    elGameZone.style.display = "flex";
+    elResultZone.style.display = "none";
+  }
+}
+
+
+
+function checkWinner(user, robot) {
+  const rules = {
+    rock: {
+      rock: "TIE",
+      paper: "LOSE",
+      scissors: "WIN"
+    },
+    paper: {
+      paper: "TIE",
+      rock: "WIN",
+      scissors: "LOSE"
+    },
+    scissors: {
+      scissors: "TIE",
+      paper: "WIN",
+      rock: "LOSE"
     }
-    return action[user][robot];
-   }
+  };
 
-// Hand
-elHands.forEach(elhand => {
-    elhand.addEventListener('click', (evnt) => {
-         swapZone (true);
-        const user = evnt.target.alt;
-        const robot = robotchoose();
-        elUser.src = evnt.target.src;
-        elRobot.src = "./img/hand-load.svg";
-        setTimeout(() => {
-            elRobot.src = `./img/${robot}.svg`;
-            const winner = checkWiner(user, robot);
+  return rules[user][robot];
+}
 
-            elTextName.textContent = winner;
-        }, 1000 ,)
-        ;
-    })});
 
-// Refresh game
-elRefershGame.addEventListener('click', () => {
-    swapZone (false);
+
+function increaseScore() {
+  score++;
+  elScore.innerText = score;
+  localStorage.setItem("score", score);
+}
+
+
+
+elHands.forEach((hand) => {
+  hand.addEventListener("click", (e) => {
+    swapZone(true);
+
+    const user = e.target.alt;
+    const robot = robotChoose();
+
+    elUser.src = e.target.src;
+    elRobot.src = "./img/choosing.svg";
+
+    setTimeout(() => {
+      elRobot.src = `./img/${robot}.svg`;
+
+      const result = checkWinner(user, robot);
+      if (result === "WIN") increaseScore();
+    }, 1000);
+  });
 });
 
-elModeChanger.addEventListener("click",()=>{modeChanger()})
+
+
+elRefreshGameButton.addEventListener("click", () => {
+  swapZone(false);
+});
+
+elModeChangerButton.addEventListener("click", modeChanger);
+
+
+
+applyMode();
